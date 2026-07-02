@@ -13,16 +13,16 @@ Laboratorio enfocado en enumeración de servicios, acceso inicial mediante fuerz
 
 ---
 
-# Tools Used
+# Attack Tools
 
-- *Nmap* (Port scanning & service enumeration)
-- Gobuster (Directory brute forcing)
-- Hydra (Credential brute force)
-- FTP Client (File enumeration)
-- OpenSSH (Remote access)
-- ExifTool (Metadata analysis)
-- Vim (Privilege escalation)
-- SecLists (Wordlists)
+- **Nmap**
+- **Gobuster**
+- **Hydra**
+- **FTP Client**
+- **OpenSSH**
+- **ExifTool**
+- **Vim**
+- **SecLists**
 
 ---
 
