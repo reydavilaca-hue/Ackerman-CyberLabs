@@ -1,42 +1,37 @@
-<h1 align="center">🎯 Obsession — Attack Path Analysis</h1>
-<p align="center">
-  <img src="https://img.shields.io/badge/Platform-DockerLabs-blue?style=flat-square" />
-  <img src="https://img.shields.io/badge/Difficulty-Easy-brightgreen?style=flat-square" />
-  <img src="https://img.shields.io/badge/Status-Completed-success?style=flat-square" />
-  <img src="https://img.shields.io/badge/OS-Linux-informational?style=flat-square" />
-</p>
+# Obsession – Attack Path Analysis: FTP, SSH and Privilege Escalation
 
-<p align="center">
-  <b>Researcher:</b> Ackerman &nbsp;|&nbsp; <b>Target IP:</b> 172.17.0.2
-</p>
+**Researcher:** Ackerman
+**Platform:** DockerLabs
+**Difficulty:** Easy
+**Target IP:** 172.17.0.2
 
 ---
 
-## 📖 Table of Contents
+## Table of Contents
 
-- [Description](#-description)
-- [Attack Tools](#-attack-tools)
-- [Reconnaissance](#-reconnaissance)
-- [FTP Enumeration](#-ftp-enumeration)
-- [Web Enumeration](#-web-enumeration)
-- [Credential Bruteforce](#-credential-bruteforce)
-- [File Analysis](#-file-analysis)
-- [Initial Access](#-initial-access)
-- [Local Enumeration](#-local-enumeration)
-- [Privilege Escalation](#-privilege-escalation)
-- [Post Exploitation](#-post-exploitation)
-- [Loot](#-loot)
-- [Attack Chain](#-attack-chain)
+- [Description](#description)
+- [Attack Tools](#attack-tools)
+- [Reconnaissance](#reconnaissance)
+- [FTP Enumeration](#ftp-enumeration)
+- [Web Enumeration](#web-enumeration)
+- [Credential Bruteforce](#credential-bruteforce)
+- [File Analysis](#file-analysis)
+- [Initial Access](#initial-access)
+- [Local Enumeration](#local-enumeration)
+- [Privilege Escalation](#privilege-escalation)
+- [Post Exploitation](#post-exploitation)
+- [Loot](#loot)
+- [Attack Chain](#attack-chain)
 
 ---
 
-## 📝 Description
+## Description
 
 A machine focused on **service enumeration**, **initial access via brute force**, and **privilege escalation** through a sudo misconfiguration. The path chains together anonymous FTP disclosure, web content discovery, credential bruteforcing, and a classic GTFOBins-style privilege escalation via `vim`.
 
 ---
 
-## 🛠 Attack Tools
+## Attack Tools
 
 | Tool | Purpose |
 |---|---|
@@ -51,7 +46,7 @@ A machine focused on **service enumeration**, **initial access via brute force**
 
 ---
 
-## 🔍 Reconnaissance
+## Reconnaissance
 
 Initial full port scan:
 
@@ -73,7 +68,7 @@ nmap -sV -sC -p- 172.17.0.2
 
 ---
 
-## 📂 FTP Enumeration
+## FTP Enumeration
 
 Anonymous login:
 
@@ -108,7 +103,7 @@ get pendientes.txt
 
 ---
 
-## 🌐 Web Enumeration
+## Web Enumeration
 
 Directory brute-forcing:
 
@@ -124,7 +119,7 @@ gobuster dir -u http://172.17.0.2 -w /opt/SecLists/Discovery/Web-Content/common.
 
 ---
 
-## 🔑 Credential Bruteforce
+## Credential Bruteforce
 
 Bruteforce against FTP using the identified username:
 
@@ -142,7 +137,7 @@ russoski:iloveme
 
 ---
 
-## 📑 File Analysis
+## File Analysis
 
 Authenticated FTP session reveals more directories:
 
@@ -181,7 +176,7 @@ cat Strong-Credentials.py
 
 ---
 
-## 🚪 Initial Access
+## Initial Access
 
 SSH login with the credentials obtained:
 
@@ -195,7 +190,7 @@ Successful authentication as **`russoski`**.
 
 ---
 
-## 🖥 Local Enumeration
+## Local Enumeration
 
 Basic post-access checks:
 
@@ -216,7 +211,7 @@ sudo -l
 
 ---
 
-## ⬆️ Privilege Escalation
+## Privilege Escalation
 
 Escalating privileges by spawning a shell from `vim`:
 
@@ -242,7 +237,7 @@ uid=0(root) gid=0(root)
 
 ---
 
-## 🔎 Post Exploitation
+## Post Exploitation
 
 Searching for sensitive files:
 
@@ -269,7 +264,7 @@ https://www.youtube.com/shorts/_v8GzGReTAk
 
 ---
 
-## 💰 Loot
+## Loot
 
 All collected artifacts are stored in [`loot/`](loot/):
 
@@ -283,12 +278,8 @@ All collected artifacts are stored in [`loot/`](loot/):
 
 ---
 
-## 🔗 Attack Chain
+## Attack Chain
 
 ```text
 Recon → FTP Enum → Information Disclosure → Gobuster → Hydra → SSH → Sudo Abuse → Root
 ```
-
----
-
-<p align="center"><i>Written for educational purposes as part of DockerLabs practice.</i></p>
